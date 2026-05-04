@@ -25,9 +25,10 @@ class DB {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -63,7 +64,8 @@ class DB {
     // Matches: Models/doctor_model.dart → class Doctor
     // Fields: id, name, type, specialty, district_commune,
     //         phone, email, address, working_hours,
-    //         appointment_book, gps, social_network
+    //         appointment_book, gps, social_network,
+    //         schedule, is_available, last_checked_at
     // ══════════════════════════════════════════
     await db.execute('''
       CREATE TABLE doctors (
@@ -78,7 +80,10 @@ class DB {
         working_hours    TEXT,
         appointment_book TEXT,
         gps              TEXT,
-        social_network   TEXT
+        social_network   TEXT,
+        schedule         TEXT,
+        is_available     INTEGER NOT NULL DEFAULT 0,
+        last_checked_at  TEXT
       )
     ''');
 
@@ -110,6 +115,24 @@ class DB {
     await db.execute(
       'CREATE INDEX idx_feedback_doctor ON feedback(doctor_id)'
     );
+  }
+
+  // ─────────────────────────────────────────────
+  // 🔹 Migrate Database on Version Upgrade
+  // ─────────────────────────────────────────────
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // v1 → v2 : add availability columns to doctors
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE doctors ADD COLUMN schedule TEXT'
+      );
+      await db.execute(
+        'ALTER TABLE doctors ADD COLUMN is_available INTEGER NOT NULL DEFAULT 0'
+      );
+      await db.execute(
+        'ALTER TABLE doctors ADD COLUMN last_checked_at TEXT'
+      );
+    }
   }
 
   // ─────────────────────────────────────────────

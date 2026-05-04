@@ -12,6 +12,11 @@ class Doctor {
   final String? gps;            // إحداثيات GPS
   final String? socialNetwork;  // رابط وسائل التواصل
 
+  // ── Availability fields ─────────────────────────
+  final String? schedule;       // JSON weekly schedule (see DoctorAvailabilityService)
+  final bool isAvailable;       // true if currently within working hours
+  final String? lastCheckedAt;  // ISO-8601 timestamp of last availability check
+
   Doctor({
     this.id,
     required this.name,
@@ -25,6 +30,10 @@ class Doctor {
     this.appointmentBook,
     this.gps,
     this.socialNetwork,
+    // Availability
+    this.schedule,
+    this.isAvailable = false,
+    this.lastCheckedAt,
   });
 
   // Convert Doctor → Map (for DB insert)
@@ -41,6 +50,10 @@ class Doctor {
         'appointment_book': appointmentBook,
         'gps': gps,
         'social_network': socialNetwork,
+        // Availability
+        'schedule': schedule,
+        'is_available': isAvailable ? 1 : 0,
+        'last_checked_at': lastCheckedAt,
       };
 
   // Convert Map → Doctor (from DB query)
@@ -57,6 +70,10 @@ class Doctor {
         appointmentBook: map['appointment_book'],
         gps: map['gps'],
         socialNetwork: map['social_network'],
+        // Availability
+        schedule: map['schedule'],
+        isAvailable: (map['is_available'] as int? ?? 0) == 1,
+        lastCheckedAt: map['last_checked_at'],
       );
 
   @override

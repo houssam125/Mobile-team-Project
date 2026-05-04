@@ -79,4 +79,29 @@ class DoctorRepository {
     final db = await _db.database;
     return await db.delete('doctors', where: 'id = ?', whereArgs: [id]);
   }
+
+  // ✅ Update only the availability status (called by DoctorAvailabilityService)
+  Future<int> updateAvailability(int doctorId, bool isAvailable) async {
+    final db = await _db.database;
+    return await db.update(
+      'doctors',
+      {
+        'is_available': isAvailable ? 1 : 0,
+        'last_checked_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [doctorId],
+    );
+  }
+
+  // ✅ Get all doctors currently marked as available / working
+  Future<List<Doctor>> getAvailableDoctors() async {
+    final db = await _db.database;
+    final result = await db.query(
+      'doctors',
+      where: 'is_available = ?',
+      whereArgs: [1],
+    );
+    return result.map((e) => Doctor.fromMap(e)).toList();
+  }
 }
